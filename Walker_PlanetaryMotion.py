@@ -4,7 +4,23 @@ Date Created: 2/7/2024
 Date Updated: 2/24/2024
 
 Description: Program that plots the orbital motion of any mass around another in space given initial values, with some bells and whistles
-Bugs: Temporary issue: If 2nd law interval is too large (sun is within polygon), area calculation will be innaccurate. I believe I can fix this
+Bugs: I am running out of visual studio, and it only runs if you click ...>Run>Run Without Debugging. It does not run for some reason if you click the arrow in the top right corner. 
+
+Basically what you are looking at: 
+    There are two main functions, one (live) that graphs an animation of a mass orbiting another mass in space. You can change the initial values below to 
+test out different planets or asteroids or satellites or whatever orbiting bodies you want. It is currently set to Earth around Sun with the Moon simultaneously orbiting the Earth. 
+Note that the orbiting distance of the Moon around the Earth is exaggerated by 25x because otherwise you can't tell them apart. 
+
+    The second function, static, graphs a still image of one period of a mass's orbit around another mass. It is currently set to Mercury around the Sun because that is our Solar System's most elliptical orbit. 
+The goal of this is to prove Kepler's 2nd Law of Planetary Motion, that planets sweep out in equal areas in equal times. The graph will also have multiple polygons that represent the area travelled by the 
+planet in a fixed amount of time. This area is approximated by an infinitely-sided polygon (you can give it as many vertices as you want). If Kepler's 2nd Law is true, all the polygons should be the same area, 
+as long as their orbiting sections are the same amount of time. The second graph that pops up shows the area of the different polygons as their number of vertices increase. They all approach the same number, which means
+Kepler's 2nd Law is true. You can play around with the initial orbital values as well as however many polygons you want, what their max vertices should be, and how far the 
+orbit secions should be, and all that fun stuff.
+
+Choose which function to run at the very bottom by unhiding whichever function you want and hiding the other.
+
+All initial values are sourced from NASA and the orbits of the bodies come from Newton's Law of Universal Gravitation.
 '''
 
 import matplotlib.pyplot as plt
@@ -13,19 +29,9 @@ import matplotlib.animation as animation
 from tqdm import tqdm
 import math
 
-def shoelace_formula(polygonBoundary, absoluteValue = True):        #function that calculated the area of a polynomial using Gauss's area formula
-    nbCoordinates = len(polygonBoundary)
-    nbSegment = nbCoordinates - 1
-
-    l = [(polygonBoundary[i+1][0] - polygonBoundary[i][0]) * (polygonBoundary[i+1][1] + polygonBoundary[i][1]) for i in range(nbSegment)]
-
-    if absoluteValue:
-        return abs(sum(l) / 2.)
-    else:
-        return sum(l) / 2.
-
+#THESE INITIALS ARE ONLY FOR "LIVE" FUNCTION
 #Moon around Earth Initials     Note on variable names - Mp_y refers to "moon position y", while Ev_x refers to "earth velocity x" etc. 
-G = 6.67e-11
+G = 6.67e-11                #univeral gravitational constant
 Mass_Earth = 5.97e24        #kg
 Mp_x = 3.84e8               #m
 Mp_y = 0
@@ -35,7 +41,6 @@ Mxs = [Mp_x]                #list of all the different x coordinates of orbit
 Mys = [Mp_y]                #list of all the different y coordinates of orbit
 
 #Earth Around Sun Initials FOR LIVE
-G = 6.67e-11
 Mass_Sun = 1.9891e30        #kg
 Ep_x = 1.5e11               #m
 Ep_y = 0
@@ -46,11 +51,20 @@ Eys = [Ep_y]                #list of all the different y coordinates of orbit
 
 #Time Conditions FOR LIVE
 delta_time = 5000           #How much time elapses between datapoints
-time_increments = 40        #how many data points are graphed
+time_increments = 40        #how many data points are graphed in a frame              These two simply control the speed of the animation
 
 fig, ax = plt.subplots()    #defining fig and ax as plots for the remainder of program
-fig1, ax1 = plt.subplots()
-#ig2, ax2 = plt.subplots()  
+
+def shoelace_formula(polygonBoundary, absoluteValue = True):        #function that calculates the area of a polynomial using Gauss's area formula
+    nbCoordinates = len(polygonBoundary)
+    nbSegment = nbCoordinates - 1
+
+    l = [(polygonBoundary[i+1][0] - polygonBoundary[i][0]) * (polygonBoundary[i+1][1] + polygonBoundary[i][1]) for i in range(nbSegment)]
+
+    if absoluteValue:
+        return abs(sum(l) / 2.)
+    else:
+        return sum(l) / 2.
 
 def live():                 #animated visualization of earth orbiting around sun while moon orbits around earth
 
@@ -78,7 +92,7 @@ def live():                 #animated visualization of earth orbiting around sun
         ax.clear()          #clears the plot, otherwise things will get messy fast
         
         #Moon Around Earth
-        for z in range(time_increments):        #tqdm()
+        for z in range(time_increments):        #tqdm() ?
 
             Ea_x = (-G*Mass_Sun*Ep_x)/((Ep_x**2 + Ep_y**2)**1.5)        #equation for calculating the acceleration of earth
             Ea_y = (-G*Mass_Sun*Ep_y)/((Ep_x**2 + Ep_y**2)**1.5)
@@ -104,8 +118,6 @@ def live():                 #animated visualization of earth orbiting around sun
             Mxs.append(25*Mp_x+Ep_x)        #add x/y positions to the list of moon positions
             Mys.append(25*Mp_y+Ep_y)        #Add the earth positions as well, so it is orbiting around earth. *25 to make the orbit visible
 
-        
-
         plt.title(str(delta_time*len(Mxs)/86400)[:4] + " Days")         #title of graph that displays days elapsed
         
         ax.set_xlim(-2.2e11, 2.2e11)        #set the axes as equal
@@ -123,6 +135,8 @@ def live():                 #animated visualization of earth orbiting around sun
     plt.show()                              #show the plot
 
 def static():               #static image of an orbit
+
+    fig1, ax1 = plt.subplots()
 
     number_of_sectors = 5   #How many ellipse sectors do you want to plot
     max_vertices = 20       #How many differently vertexed polygons do you want to plot
@@ -156,7 +170,7 @@ def static():               #static image of an orbit
             time = 88
             delta_time = 100
             time_increments = time*864
-            plt.title(str(delta_time*len(xs)/86400)[:4] + " Days")      #title in days elapsed
+
             vertices = z        #the number of vertexes the polygon has change. It will iterate through every number from 1 to max_vertices
 
             firstpoint = 00 + period_of_sectors*a      #MUST be less than/equal to time          #the first point for a time interval
